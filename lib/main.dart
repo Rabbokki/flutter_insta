@@ -1,122 +1,152 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'home.dart';
+import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 
-void main() {
-  runApp(const MyApp());
+void main(){
+  runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  //메인 페이지 시작되면.... 게시글 읽어서 뿌려주기
+
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Instagram',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          appBarTheme: AppBarTheme(
+              color: Colors.white,
+              elevation: 1,
+              titleTextStyle: TextStyle(color: Colors.black, fontSize: 25),
+              actionsIconTheme: IconThemeData(color: Colors.black)
+          )
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: Instagram(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class Instagram extends StatefulWidget {
+  const Instagram({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<Instagram> createState() => _InstagramState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _InstagramState extends State<Instagram> {
+  // 변수 선언 -> setState() 변경
+  var tab = 0;
+  var data = [];
+  //카메라 사진 변수
+  var UserImage;
 
-  void _incrementCounter() {
+  //화면에서 보낸 내용
+  var newContent;
+
+  setUserNewContent(content){
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      newContent = content;
     });
+  }
+
+  addMyData(){
+    DateTime now = DateTime.now();
+    var date = DateFormat('MMMM dd').format(now);
+    var myData = {
+      "id": 0,
+      "user": "나",
+      "image": userImage,
+      "likes": 0,
+      "date": date,
+      "liked": "false",
+      "content": newContent
+    };
+    setState(() {
+      data.insert(0, myData);
+    });
+  }
+
+  //홈에서 보낸 추가 데이터를 data에 추가하기
+  addData(addContents){
+    setState(() {
+      data.addAll(addContents);
+    });
+  }
+
+
+  //데이터 가져오기
+  getData() async{
+    try{
+      var result = await http.get(
+        Uri.parse('https://zzzmini.github.io/js/instar_data.json')
+      );
+      if(result.statusCode == 200){
+        var instaData = jsonDecode(result.body);
+        setState(() {
+          data = instaData;
+        });
+      }else{
+        print('Error : ${result.statusCode}');
+      }
+    }catch(e){
+      print('예외 : $e');
+    }
+  }
+  @override
+  void initState(){
+    super.initState();
+    getData();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text('Instagram'),
+        actions: [
+          IconButton(
+            onPressed: (){},
+            icon: Icon(Icons.add_box_outlined),
+            iconSize: 30,)
+        ],
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      body:
+      [
+        Home(data : data, addData : addData),
+        Text('Shop')
+      ]
+      [tab],
+
+      bottomNavigationBar: BottomNavigationBar(
+          onTap: (index){
+            setState(() {
+              tab = index;
+              print(tab);
+            });
+          },
+          items: [
+            BottomNavigationBarItem(
+                icon: Icon(Icons.home_outlined),
+                label: 'Home'
             ),
-          ],
-        ),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.shopping_bag_outlined),
+                label: 'Shop'
+            ),
+          ]
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
